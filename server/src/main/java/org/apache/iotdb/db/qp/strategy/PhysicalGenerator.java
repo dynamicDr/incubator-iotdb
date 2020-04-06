@@ -139,9 +139,14 @@ public class PhysicalGenerator {
           throw new LogicalOperatorException(
               "For Insert command, cannot specified more than one seriesPath: " + paths);
         }
-        return new InsertPlan(paths.get(0).getFullPath(), insert.getTime(),
+        InsertPlan insertPlan =  new InsertPlan(paths.get(0).getFullPath(),
+            insert.getTime(),
             insert.getMeasurementList(),
             insert.getValueList());
+        if(insert.getUnsetParams() != null){
+          insertPlan.setUnsetParams(insert.getUnsetParams());
+        }
+        return insertPlan;
       case QUERY:
         QueryOperator query = (QueryOperator) operator;
         return transformQuery(query);

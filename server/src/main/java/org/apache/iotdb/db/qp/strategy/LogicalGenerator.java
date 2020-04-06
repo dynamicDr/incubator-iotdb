@@ -24,11 +24,14 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.iotdb.db.conf.IoTDBDescriptor;
+import org.apache.iotdb.db.engine.cache.RamUsageEstimator.IdentityHashSet;
 import org.apache.iotdb.db.exception.runtime.SQLParserException;
 import org.apache.iotdb.db.qp.constant.DatetimeUtils;
 import org.apache.iotdb.db.qp.constant.SQLConstant;
@@ -157,6 +160,7 @@ import org.apache.iotdb.tsfile.utils.StringContainer;
  */
 public class LogicalGenerator extends SqlBaseBaseListener {
 
+  private static final long UNSET = -1;
   private RootOperator initializedOperator = null;
   private ZoneId zoneId;
   private int operatorType;
@@ -166,6 +170,7 @@ public class LogicalGenerator extends SqlBaseBaseListener {
   private UpdateOperator updateOp;
   private QueryOperator queryOp;
   private DeleteDataOperator deleteDataOp;
+  private List<Integer> qMarkList;
 
   LogicalGenerator(ZoneId zoneId) {
     this.zoneId = zoneId;
@@ -861,17 +866,36 @@ public class LogicalGenerator extends SqlBaseBaseListener {
     super.enterInsertValuesSpec(ctx);
     long timestamp;
     if (ctx.dateFormat() != null) {
-      timestamp = parseTimeFormat(ctx.dateFormat().getText());
+      if (isQMark(ctx.dateFormat())){
+        if(qMarkList == null){
+          qMarkList = new LinkedList<>();
+        }
+        qMarkList.add(-1);
+        timestamp = UNSET;
+      }
+      else {
+        timestamp = parseTimeFormat(ctx.dateFormat().getText());
+      }
     } else {
       timestamp = Long.parseLong(ctx.INT().getText());
     }
     insertOp.setTime(timestamp);
     List<String> valueList = new ArrayList<>();
     List<ConstantContext> values = ctx.constant();
-    for (ConstantContext value : values) {
+    for (int index = 0; index < values.size(); index++) {
+      ConstantContext value = values.get(index);
+      if(isQMark(value)){
+        if(qMarkList == null){
+          qMarkList = new LinkedList<>();
+        }
+        qMarkList.add(index);
+      }
       valueList.add(value.getText());
     }
     insertOp.setValueList(valueList.toArray(new String[0]));
+    if(qMarkList != null){
+      insertOp.setUnsetParams(qMarkList.stream().mapToInt(Integer::intValue).toArray());
+    }
     initializedOperator = insertOp;
   }
 
@@ -1319,5 +1343,8 @@ public class LogicalGenerator extends SqlBaseBaseListener {
       throw new SQLParserException(
           String.format("encoding %s does not support %s", tsEncoding, tsDataType));
     }
+  }
+  public static boolean isQMark(ParserRuleContext ctx){
+    return ctx.getText().equals("?");
   }
 }

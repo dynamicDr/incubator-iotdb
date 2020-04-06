@@ -266,6 +266,7 @@ timeValue
     : dateFormat
     | dateExpression
     | INT
+    | QMARK
     ;
 
 propertyValue
@@ -313,6 +314,7 @@ dataType
 dateFormat
     : DATETIME
     | NOW LR_BRACKET RR_BRACKET
+    | QMARK
     ;
 
 constant
@@ -321,6 +323,7 @@ constant
     | MINUS? realLiteral
     | MINUS? INT
     | STRING_LITERAL
+    | QMARK
     ;
 
 dateExpression
@@ -802,12 +805,14 @@ R_BRACKET : '}';
 
 UNDERLINE : '_';
 
+QMARK : '?';
+
 STRING_LITERAL
    : DOUBLE_QUOTE_STRING_LITERAL
    | SINGLE_QUOTE_STRING_LITERAL
    ;
 
-INT : [0-9]+;
+INT : [0-9]+ ;
 
 EXPONENT : INT ('e'|'E') ('+'|'-')? INT ;
 

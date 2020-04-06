@@ -45,6 +45,7 @@ public class InsertPlan extends PhysicalPlan {
   private TSDataType[] dataTypes;
   private String[] values;
   private long time;
+  private int[] unsetParams;
 
   public InsertPlan() {
     super(false, OperatorType.INSERT);
@@ -135,6 +136,10 @@ public class InsertPlan extends PhysicalPlan {
   public void setValues(String[] values) {
     this.values = values;
   }
+
+  public int[] getUnsetParams() { return unsetParams; }
+
+  public void setUnsetParams(int[] unsetParams) { this.unsetParams = unsetParams; }
 
   @Override
   public boolean equals(Object o) {

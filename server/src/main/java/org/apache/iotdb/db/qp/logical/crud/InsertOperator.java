@@ -26,6 +26,7 @@ public class InsertOperator extends SFWOperator {
   private long time;
   private String[] measurementList;
   private String[] valueList;
+  private int[] unsetParams;
 
   public InsertOperator(int tokenIntType) {
     super(tokenIntType);
@@ -56,4 +57,11 @@ public class InsertOperator extends SFWOperator {
     this.time = time;
   }
 
+  public int[] getUnsetParams() {
+    return unsetParams;
+  }
+
+  public void setUnsetParams(int[] unsetParams) {
+    this.unsetParams = unsetParams;
+  }
 }
